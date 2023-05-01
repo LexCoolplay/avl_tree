@@ -9,18 +9,21 @@
 
 using namespace std;
 
+typedef unsigned long long ull;
+
 template <typename T = string>
 class Node {
 private:
-    Node* leftChild;
-    Node* rightChild;
-    int nodeId;
+    Node* leftChild = nullptr;
+    Node* rightChild = nullptr;
+    long long nodeId;
     T value;
     int height = 1;
 
     Node<T>* deleteMin();
     Node<T>* findMin();
 
+    ull hash = 0;
 
     Node<T>* balance();
     void recalculateHeight();
@@ -28,19 +31,20 @@ private:
     Node<T>* rightRotate();
     Node<T>* leftRotate();
 public:
-    Node<T>* find(int node_id);
+    Node<T>* find(ull hash);
 
     Node(int nodeId, T Value);
     ~Node();
 
     Node<T>* addNode(Node<T>* addedNode);
 
-    Node<T>* deleteNode(int node_id);
+    Node<T>* deleteNode(ull hash);
 
     T getValue();
     int getId();
     Node* right();
     Node* left();
+    ull getHash();
 
     void serialize(ostream& os) const;
     Node* deserialize(istream& is);

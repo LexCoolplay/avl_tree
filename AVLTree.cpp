@@ -9,10 +9,10 @@
 
 template <typename T>
 bool AVLTree<T>::addNode(Node<T>* node) {
-    if (this->getNode(node->getId())) {
+    if (this->getNode(node->getHash())) {
         return false;
     }
-    root->addNode(node);
+    root = root->addNode(node);
     this->nodeCount++;
     return true;
 }
@@ -24,48 +24,58 @@ bool AVLTree<T>::addNode(int node_id, T value) {
 }
 
 template <typename T>
-bool AVLTree<T>::deleteNode(int node_id) {
-    if (!this->getNode(node_id))
+bool AVLTree<T>::deleteNode(ull hash) {
+    if (!this->getNode(hash))
     {
         return false;
     }
-    root->deleteNode(node_id);
+    root->deleteNode(hash);
     this->nodeCount--;
     return true;
 }
 
 template <>
-AVLTree<string>* AVLTree<string>::deserialize(std::istream &is){
-    string in_value;
+AVLTree<char*>* AVLTree<char*>::deserialize(std::istream &is){
+    char* in_value = (char*) malloc(sizeof(char) * 256);
     is >> in_value;
     int node_count = stoi(in_value);
-    Node<string>* result_root;
-    result_root->deserialize(is);
-    AVLTree<string>* result_tree = new AVLTree<string>(result_root);
-    for (int i = 0; i < node_count; ++i) {
-        Node<string>* added_node;
-        added_node->deserialize(is);
-        result_tree->addNode(added_node);
+    auto* result_root = new Node<char*>(0, in_value);
+    result_root = result_root->deserialize(is);
+    auto* result_tree = new AVLTree<char*>(result_root);
+    bool result;
+    for (int i = 1; i < node_count; ++i) {
+        auto* added_node = new Node<char*>(0, in_value);
+        added_node = added_node->deserialize(is);
+        result = result_tree->addNode(added_node);
+        if (!result) {
+            return nullptr;
+        }
     }
-    delete this->root;
     this->root = result_root;
+    this->nodeCount = node_count;
     return this;
 }
 
 template <typename T>
-Node<T>* AVLTree<T>::getNode(int node_id) {
-    return this->root->find(node_id);
+Node<T>* AVLTree<T>::getNode(ull hash) {
+    return this->root->find(hash);
 }
 
 template <typename T>
 void AVLTree<T>::serialize(std::ostream &os) const {
-    os >> this->nodeCount;
+    os << to_string(this->nodeCount);
+    os << separator;
     this->root->serialize(os);
 }
 
 template <typename T>
 AVLTree<T>::AVLTree(Node<T>* root) {
     this->root = root;
+}
+
+template <>
+AVLTree<char*>::AVLTree(long long node_id, char* value) {
+    this->root = new Node<char*>(node_id, value);
 }
 
 template <typename T>

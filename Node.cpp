@@ -4,7 +4,7 @@
 
 #include "Node.h"
 
-const char separator = ';';
+const char separator = ' ';
 
 template <typename T>
 T Node<T>::getValue() {
@@ -14,7 +14,21 @@ T Node<T>::getValue() {
 template <typename T>
 Node<T>::Node(int nodeId, T value) {
     this->nodeId = nodeId;
-    this->value  = value;
+    this->value = value;
+    this->hash = nodeId;
+}
+
+template <>
+Node<char*>::Node(int nodeId, char* value) {
+    this->nodeId = nodeId;
+    this->value = value;
+
+    // polynomial rolling хэш-функция
+    for (int index = 0; value[index] != 0; index++)
+    {
+        this->hash *= 31;
+        this->hash += value[index];
+    }
 }
 template <typename T>
 Node<T>::~Node() {
@@ -37,49 +51,56 @@ int Node<T>::getId() {
 }
 
 template <typename T>
-Node<T>* Node<T>::find(int node_id) {
-    if (node_id == this->nodeId) {
+Node<T>* Node<T>::find(ull target_hash) {
+    if (target_hash == this->hash) {
         return this;
     }
-    if (node_id < this->nodeId) {
-        if (!this->left()) return nullptr;
-        return this->left()->find(node_id);
+    if (target_hash < this->nodeId) {
+        if (this->left() == nullptr) return nullptr;
+        return this->left()->find(target_hash);
     }
-    if (!this->right()) return nullptr;
-    return this->right()->find(node_id);
+    if (this->right() == nullptr) return nullptr;
+    return this->right()->find(target_hash);
 }
 
 template<>
-void Node<string>::serialize(std::ostream &os) const {
+void Node<char*>::serialize(std::ostream &os) const {
     os << to_string(nodeId);
+    os << separator;
     os << value;
+    os << separator;
     if (leftChild != nullptr) {
         leftChild->serialize(os);
     }
     if (rightChild != nullptr) {
-        leftChild->serialize(os);
+        rightChild->serialize(os);
     }
 }
 
 template<>
-Node<string>* Node<string>::deserialize(std::istream &is){
-    string in_value;
+Node<char*>* Node<char*>::deserialize(std::istream &is){
+    char* in_value = (char*) malloc(sizeof (char) * 256);
     is >> in_value;
-    this->nodeId = std::stoi(in_value);
+    int node_id = std::atoi(in_value);
     is >> in_value;
-    this->value = in_value;
-    return this;
+    return new Node<char*>(node_id, in_value);
 }
 
 template<typename T>
 Node<T>* Node<T>::addNode(Node<T> *addedNode) {
-    if (addedNode->nodeId < this->nodeId) {
-        this->left() == nullptr? this->leftChild = addedNode : this->left()->addNode(addedNode);
+    if (addedNode->hash < this->hash) {
+        this->left() == nullptr? this->leftChild = addedNode : this->leftChild = this->left()->addNode(addedNode);
     }
     else {
-        this->right() == nullptr? this->rightChild = addedNode : this->right()->addNode(addedNode);
+        this->right() == nullptr? this->rightChild = addedNode : this->rightChild = this->right()->addNode(addedNode);
     }
-    return this->balance();
+    Node<T>* result_node = this->balance();
+    return result_node;
+}
+
+template<typename T>
+ull Node<T>::getHash() {
+    return this->hash;
 }
 
 template<typename T>
@@ -126,7 +147,7 @@ int Node<T>::diffHeight() {
 template<typename T>
 Node<T>* Node<T>::leftRotate() {
     Node<T>* child = this->right();
-    this->leftChild = child->leftChild;
+    this->rightChild = child->leftChild;
     child->leftChild = this;
     this->recalculateHeight();
     child->recalculateHeight();
@@ -136,7 +157,7 @@ Node<T>* Node<T>::leftRotate() {
 template<typename T>
 Node<T>* Node<T>::rightRotate() {
     Node<T>* child = this->left();
-    this->rightChild = child->leftChild;
+    this->leftChild = child->rightChild;
     child->rightChild = this;
     this->recalculateHeight();
     child->recalculateHeight();
@@ -144,13 +165,13 @@ Node<T>* Node<T>::rightRotate() {
 }
 
 template <typename T>
-Node<T>* Node<T>::deleteNode(int node_id) {
-    if(node_id < this->value) {
-        this->left()->deleteNode(node_id);
+Node<T>* Node<T>::deleteNode(ull target_hash) {
+    if(target_hash < this->hash) {
+        this->left()->deleteNode(target_hash);
         return this->balance();
     }
-    if (node_id > this->value) {
-        this->right()->deleteNode(node_id);
+    if (target_hash > this->hash) {
+        this->right()->deleteNode(target_hash);
         return this->balance();
     }
     // Попали в ноду
@@ -171,14 +192,14 @@ Node<T>* Node<T>::balance() {
     this->recalculateHeight();
     if (this->diffHeight() == 2) {
        if (this->right()->diffHeight() < 0) {
-           this->right() = this->right()->rightRotate();
+           this->rightChild = this->right()->rightRotate();
        }
         return this->leftRotate();
     }
 
     if (this->diffHeight() == -2) {
         if (this->left()->diffHeight() > 0) {
-            this->left()= this->left()->leftRotate();
+            this->leftChild = this->left()->leftRotate();
         }
         return this->rightRotate();
     }
