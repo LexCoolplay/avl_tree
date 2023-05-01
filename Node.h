@@ -16,18 +16,29 @@ private:
     Node* rightChild;
     int nodeId;
     T value;
-    int height;
+    int height = 1;
+
+    Node<T>* deleteMin();
+    Node<T>* findMin();
+
+
+    Node<T>* balance();
+    void recalculateHeight();
+    int diffHeight();
+    Node<T>* rightRotate();
+    Node<T>* leftRotate();
 public:
-    Node* get(int node_id);
+    Node<T>* find(int node_id);
 
     Node(int nodeId, T Value);
     ~Node();
 
-    void addNode(Node<T>* addedNode);
-    void balance();
-    bool deleteNode(int node_id);
+    Node<T>* addNode(Node<T>* addedNode);
+
+    Node<T>* deleteNode(int node_id);
 
     T getValue();
+    int getId();
     Node* right();
     Node* left();
 

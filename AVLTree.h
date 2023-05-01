@@ -16,17 +16,16 @@ public:
     AVLTree(Node<T>* root);
     ~AVLTree();
 
-    void addNode(Node<T>* addedNode);
-    void addNode(int node_id, T value);
+    bool addNode(Node<T>* addedNode);
+    bool addNode(int node_id, T value);
 
     Node<T>* getNode(int node_id);
-    void deleteNode(int node_id);
+    bool deleteNode(int node_id);
 
     void serialize(ostream& os) const;
     AVLTree* deserialize(istream& is);
 private:
     Node<T>* root;
-    void rebalance();
     int nodeCount = 0;
 };
 

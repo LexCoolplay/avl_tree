@@ -8,20 +8,30 @@
 
 
 template <typename T>
-void AVLTree<T>::addNode(Node<T>* node) {
-    this->nodeCount++;
+bool AVLTree<T>::addNode(Node<T>* node) {
+    if (this->getNode(node->getId())) {
+        return false;
+    }
     root->addNode(node);
+    this->nodeCount++;
+    return true;
 }
 
 template <typename T>
-void AVLTree<T>::addNode(int node_id, T value) {
+bool AVLTree<T>::addNode(int node_id, T value) {
     Node<T>* addedNode = new Node<T>(node_id, value);
-    addNode(addedNode);
+    return addNode(addedNode);
 }
 
 template <typename T>
-void AVLTree<T>::deleteNode(int node_id) {
-    root->deleteNode(node_id)? this->nodeCount-- : this->nodeCount;
+bool AVLTree<T>::deleteNode(int node_id) {
+    if (!this->getNode(node_id))
+    {
+        return false;
+    }
+    root->deleteNode(node_id);
+    this->nodeCount--;
+    return true;
 }
 
 template <>
@@ -44,7 +54,7 @@ AVLTree<string>* AVLTree<string>::deserialize(std::istream &is){
 
 template <typename T>
 Node<T>* AVLTree<T>::getNode(int node_id) {
-    this->root->getNode(node_id);
+    return this->root->find(node_id);
 }
 
 template <typename T>
@@ -62,6 +72,3 @@ template <typename T>
 AVLTree<T>::~AVLTree() {
     delete this->root;
 }
-
-template <typename T>
-void AVLTree<T>::rebalance() {}
