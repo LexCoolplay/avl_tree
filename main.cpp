@@ -417,7 +417,7 @@ ull string_hash(char* buffer) {
 cmd_commands resolve_cmd(char* cmd) {
     char command[256] = "";
     char subcommand[16] = "";
-    sscanf_s(cmd, "%s", command, 16);
+    sscanf(cmd, "%s", command);
     if (strcmp("+", command) == 0) {
         return ADD;
     }
@@ -446,15 +446,15 @@ int main() {
     char* second_arg = nullptr;
     AVLTree<char*>* working_tree = nullptr;
     AVLTree<char*>* working_tree_copy = nullptr;
-    ofstream serialize_output = nullptr;
-    ifstream deserialize_input = nullptr;
+    ofstream serialize_output;
+    ifstream deserialize_input;
 
     while (gets(buffer)) {
         switch (resolve_cmd(buffer)) {
             case ADD:
                 arg = (char*) calloc(256, sizeof(char));
                 second_arg = (char*) calloc(1024, sizeof(char));
-                sscanf_s(buffer, "%s %s %s", cmd, 16, arg, 256, second_arg, 1024);
+                sscanf(buffer, "%s %s %s", cmd, arg, second_arg);
                 if (working_tree == nullptr) {
                     working_tree = new AVLTree<char *>(atoll(second_arg), arg);
                     cout << "OK" << endl;
@@ -475,7 +475,7 @@ int main() {
                     cout << "NoSuchWord\n";
                 } else {
                     arg = new char[256];
-                    sscanf_s(buffer, "%s %s", cmd, 16, arg, 256);
+                    sscanf(buffer, "%s %s", cmd, arg);
                     bool result = working_tree->deleteNode(string_hash(arg));
                     delete arg;
                     if (result) {
@@ -491,7 +491,7 @@ int main() {
                     cout << "NoSuchWord\n";
                 } else {
                     arg = new char[256];
-                    sscanf_s(buffer, "%s", arg, 256);
+                    sscanf(buffer, "%s", arg);
                     Node<char *> *result = working_tree->getNode(string_hash(arg));
                     if (result == nullptr) {
                         cout << "NoSuchWord" << endl;
@@ -504,7 +504,7 @@ int main() {
             case SERIALIZE:
                 arg = (char*) calloc(256, sizeof(char));
                 second_arg = (char*) calloc(1024, sizeof(char));
-                sscanf_s(buffer, "%s %s %s", cmd, 16, arg, 256, second_arg, 1024);
+                sscanf(buffer, "%s %s %s", cmd, arg, second_arg);
                 serialize_output.open(second_arg, ios::out | ios::binary);
                 if (working_tree == nullptr) {
                     serialize_output << 0;
@@ -531,7 +531,7 @@ int main() {
                 }
                 arg = (char*) calloc(256, sizeof(char));
                 second_arg = (char*) calloc(1024, sizeof(char));
-                sscanf_s(buffer, "%s %s %s", cmd, 16, arg, 256, second_arg, 1024);
+                sscanf(buffer, "%s %s %s", cmd, arg, second_arg);
                 deserialize_input.open(second_arg, ios::in | ios::binary);
                 working_tree = working_tree->deserialize(deserialize_input);
                 if (working_tree == nullptr) {
